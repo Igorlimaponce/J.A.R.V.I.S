@@ -8,7 +8,7 @@ def ask_deepseek(prompt, context=None):
         if context:
             messages.insert(0, {"role": "system", "content": context})
         
-        response = ollama.chat(model="deepseek-r1:1.5b", messages=messages)
+        response = ollama.chat(model="deepseek-r1:7b", messages=messages)
 
         # Certifica-se de que 'message' e 'content' existem na resposta
         if not hasattr(response, "message") or not hasattr(response.message, "content"):

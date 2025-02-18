@@ -5,6 +5,10 @@ import subprocess
 from TTS.api import TTS
 from deep_seek_conection import ask_deepseek
 
+from memory.long.BD_Connection import salvar_historico, obter_historico
+from memory.short.redis import salvar_contexto, obter_contexto
+from memory.Me import carregar_perfil
+
 # Configuração do áudio
 RATE = 16000  # Taxa de amostragem (16 kHz, compatível com Whisper)
 DURATION = 10  # Tempo de gravação (segundos)
@@ -53,11 +57,30 @@ def texto_para_fala(texto, arquivo_saida="fala.wav"):
     sd.wait()
 
     print("✅ Fala gerada e reproduzida!")
+
+def processar_mensagem(usuario_id, mensagem):
+    contexto = obter_contexto(usuario_id)  # Puxa curto prazo (Redis)
+    perfil = carregar_perfil(usuario_id)   # Carrega personalização (JSON)
+    historico = obter_historico(usuario_id, 5)  # Consulta últimas interações (PostgreSQL)
+
+    # Busca conhecimento relevante via embeddings
+    #memoria_relevante = buscar_memoria(mensagem)
+
+    # Gera resposta com IA baseada em tudo isso
+    resposta = ask_deepseek(mensagem)
+
+    salvar_contexto(usuario_id, mensagem)  # Atualiza memória de curto prazo
+    salvar_historico(usuario_id, mensagem, resposta)  # Atualiza memória de longo prazo
+    #adicionar_memoria(mensagem)  # Atualiza embeddings
+
+    return resposta
+
     
 # Executa o processo completo
 gravar_audio()
 transcricao = transcrever_audio()
-deep_seek_response = ask_deepseek(transcricao)
+deep_seek_response = processar_mensagem(1, transcricao)
+
 if deep_seek_response != '':
     if transcricao:
         print("📝 Transcrição:", transcricao)

@@ -11,6 +11,8 @@ from memory.Me import carregar_perfil
 
 from deep_seek_modelo_base import montaTexto
 
+from limpar_transcricao import limpar_transcricao
+
 # Configuração do áudio
 RATE = 16000  # Taxa de amostragem (16 kHz, compatível com Whisper)
 DURATION = 10  # Tempo de gravação (segundos)
@@ -71,8 +73,9 @@ def processar_mensagem(usuario_id, mensagem):
     # Gera resposta com IA baseada em tudo isso
     resposta = ask_deepseek(perguntaOtimizada)
 
-    salvar_contexto(usuario_id, mensagem)  # Atualiza memória de curto prazo
-    salvar_historico(usuario_id, mensagem, resposta)  # Atualiza memória de longo prazo
+    MensagemLimpa = limpar_transcricao(mensagem)
+    salvar_contexto(usuario_id, MensagemLimpa)  # Atualiza memória de curto prazo
+    salvar_historico(usuario_id, MensagemLimpa, resposta)  # Atualiza memória de longo prazo
     #adicionar_memoria(mensagem)  # Atualiza embeddings
 
     return resposta
@@ -92,6 +95,6 @@ if deep_seek_response != '':
 
     audio_gerado = texto_para_fala(deep_seek_response)
 else:
-    print("Vazio")
+    print("J.A.R.V.I.S nao retornou nada!")
 
 

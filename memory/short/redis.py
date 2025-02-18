@@ -11,4 +11,7 @@ def salvar_contexto(usuario_id,mensagem):
 
 def obter_contexto(usuario_id):
     chave = f"contexto:{usuario_id}"
-    return r.lrange(chave, 0, -1)
+    if r.exists(chave): 
+        return r.lrange(chave, 0, -1)
+    else:
+        return ""

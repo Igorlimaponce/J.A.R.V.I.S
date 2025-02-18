@@ -9,6 +9,8 @@ from memory.long.BD_Connection import salvar_historico, obter_historico
 from memory.short.redis import salvar_contexto, obter_contexto
 from memory.Me import carregar_perfil
 
+from deep_seek_modelo_base import montaTexto
+
 # Configuração do áudio
 RATE = 16000  # Taxa de amostragem (16 kHz, compatível com Whisper)
 DURATION = 10  # Tempo de gravação (segundos)
@@ -65,9 +67,9 @@ def processar_mensagem(usuario_id, mensagem):
 
     # Busca conhecimento relevante via embeddings
     #memoria_relevante = buscar_memoria(mensagem)
-
+    perguntaOtimizada = montaTexto(mensagem,contexto,perfil,historico,memoria_relevante='')
     # Gera resposta com IA baseada em tudo isso
-    resposta = ask_deepseek(mensagem)
+    resposta = ask_deepseek(perguntaOtimizada)
 
     salvar_contexto(usuario_id, mensagem)  # Atualiza memória de curto prazo
     salvar_historico(usuario_id, mensagem, resposta)  # Atualiza memória de longo prazo
@@ -80,7 +82,6 @@ def processar_mensagem(usuario_id, mensagem):
 gravar_audio()
 transcricao = transcrever_audio()
 deep_seek_response = processar_mensagem(1, transcricao)
-
 if deep_seek_response != '':
     if transcricao:
         print("📝 Transcrição:", transcricao)

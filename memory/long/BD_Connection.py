@@ -1,4 +1,5 @@
 import psycopg2
+from datetime import datetime
 
 # Conectar ao banco de dados
 conn = psycopg2.connect(database="J.A.R.V.I.S", user="postgres", password="123456", host="localhost")
@@ -16,10 +17,16 @@ cursor.execute("""
 """)
 conn.commit()
 
-def salvar_historico(usuario_id, mensagem, resposta):
-    cursor.execute("INSERT INTO historico (usuario_id, mensagem, resposta) VALUES (%s, %s, %s)", (usuario_id, mensagem, resposta))
+def salvar_historico(usuario_id, mensagem, resposta,data=datetime.today()):
+    cursor.execute("INSERT INTO historico (usuario_id, mensagem, resposta,data) VALUES (%s, %s, %s,%s)", (usuario_id, mensagem, resposta,data))
     conn.commit()
 
 def obter_historico(usuario_id, limite=20):
-    cursor.execute("SELECT mensagem, resposta FROM historico WHERE usuario_id=%s ORDER BY data DESC LIMIT %s", (usuario_id, limite))
-    return cursor.fetchall()
+    cursor.execute("SELECT EXISTS (SELECT 1 FROM historico WHERE usuario_id = %s)", (usuario_id,))
+    existe = cursor.fetchone()[0]  # Retorna True se há dados, False se não houver
+
+    if existe == True:
+        cursor.execute("SELECT mensagem, resposta FROM historico WHERE usuario_id=%s ORDER BY data DESC LIMIT %s", (usuario_id, limite))
+        return cursor.fetchall()
+    else:
+        return ""

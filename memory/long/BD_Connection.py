@@ -30,3 +30,7 @@ def obter_historico(usuario_id, limite=20):
         return cursor.fetchall()
     else:
         return ""
+    
+def salvar_principais_topicos(topicos_conversa):
+    cursor.execute("UPDATE historico SET principais_topicos = %s WHERE id = (SELECT id FROM historico ORDER BY data DESC LIMIT 1);", (topicos_conversa))
+    conn.commit()

@@ -32,6 +32,11 @@ def montaTexto(mensagem, contexto, perfil, historico, memoria_relevante):
     Memória relevante do usuário:
     {memoria_relevante}
 
+    Responda normalmente à minha pergunta.
+    Depois da resposta, liste em no máximo 15 palavras os principais tópicos abordados.
+    Coloque APENAS os tópicos dentro <topicos> e </topicos>.
+    Antes de enviar a resposta, verifique que <topicos> foi aberto e fechado corretamente.
+
     Agora, responda da melhor maneira possível:
     Usuário: {mensagem}
     Assistente:

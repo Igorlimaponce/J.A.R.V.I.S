@@ -5,7 +5,7 @@ import subprocess
 from TTS.api import TTS
 from deep_seek_conection import ask_deepseek
 
-from memory.long.BD_Connection import salvar_historico, obter_historico
+from memory.long.BD_Connection import salvar_historico, obter_historico, salvar_principais_topicos
 from memory.short.redis import salvar_contexto, obter_contexto
 from memory.Me import carregar_perfil
 
@@ -73,9 +73,12 @@ def processar_mensagem(usuario_id, mensagem):
     # Gera resposta com IA baseada em tudo isso
     resposta = ask_deepseek(perguntaOtimizada)
 
-    MensagemLimpa = limpar_transcricao(mensagem)
+    MensagemLimpa, Topicos = limpar_transcricao(mensagem)
     salvar_contexto(usuario_id, MensagemLimpa)  # Atualiza memória de curto prazo
     salvar_historico(usuario_id, MensagemLimpa, resposta)  # Atualiza memória de longo prazo
+    if Topicos != '':
+        salvar_principais_topicos(Topicos)
+    
     #adicionar_memoria(mensagem)  # Atualiza embeddings
 
     return resposta

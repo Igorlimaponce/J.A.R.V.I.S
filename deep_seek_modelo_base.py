@@ -37,9 +37,29 @@ def montaTexto(mensagem, contexto, perfil, historico, memoria_relevante):
     Coloque APENAS os tópicos dentro <topicos> e </topicos>.
     Antes de enviar a resposta, verifique que <topicos> foi aberto e fechado corretamente.
 
+    Detalhe sobre o retorno do Topico : Analise a conversa abaixo e extraia os 15 principais tópicos abordados. 
+    Retorne apenas uma lista de palavras-chave separadas por vírgula, sem frases longas e sem palavras irrelevantes como artigos, preposições ou conectivos (exemplo: 'o', 'de', 'para', 'e').
+    Utilize apenas substantivos, verbos ou adjetivos importantes. Não inclua pontuações, números ou símbolos. 
+    Retorne os tópicos no seguinte formato: 'palavra1, palavra2, palavra3, ...'."
+
     Agora, responda da melhor maneira possível:
     Usuário: {mensagem}
     Assistente:
+    """
+
+    print(pergunta_modelo)  # Para depuração
+
+        
+    return pergunta_modelo
+
+
+def monta_topicos(mensagem):
+    pergunta_modelo = f"""
+    Analise a conversa abaixo e extraia os 15 principais tópicos abordados. Retorne apenas uma lista de palavras-chave separadas por vírgula, sem frases longas e sem palavras irrelevantes como artigos, preposições ou conectivos (exemplo: 'o', 'de', 'para', 'e'). Utilize apenas substantivos, verbos ou adjetivos importantes. Não inclua pontuações, números ou símbolos. Retorne os tópicos no seguinte formato: 'palavra1, palavra2, palavra3, ...'."
+
+    ------------------------------------------------------------------------------------------
+
+    {mensagem}
     """
 
     print(pergunta_modelo)  # Para depuração

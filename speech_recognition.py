@@ -5,13 +5,15 @@ import subprocess
 from TTS.api import TTS
 from deep_seek_conection import ask_deepseek
 
-from memory.long.BD_Connection import salvar_historico, obter_historico, salvar_principais_topicos
+from memory.long.BD_Connection import salvar_historico, obter_historico
 from memory.short.redis import salvar_contexto, obter_contexto
 from memory.Me import carregar_perfil
 
-from deep_seek_modelo_base import montaTexto
+from deep_seek_modelo_base import montaTexto, monta_topicos
 
 from limpar_transcricao import limpar_transcricao
+
+from aux_comand.tasks import verificar_task
 
 # Configuração do áudio
 RATE = 16000  # Taxa de amostragem (16 kHz, compatível com Whisper)
@@ -65,7 +67,10 @@ def texto_para_fala(texto, arquivo_saida="fala.wav"):
 def processar_mensagem(usuario_id, mensagem):
     contexto = obter_contexto(usuario_id)  # Puxa curto prazo (Redis)
     perfil = carregar_perfil(usuario_id)   # Carrega personalização (JSON)
-    historico = obter_historico(usuario_id, 5)  # Consulta últimas interações (PostgreSQL)
+    MontaHistoricoDeTopicos = monta_topicos(mensagem)
+    respostaHistorico = ask_deepseek(MontaHistoricoDeTopicos)
+    
+    historico = obter_historico(1,respostaHistorico, 5)  # Consulta últimas interações (PostgreSQL)
 
     # Busca conhecimento relevante via embeddings
     #memoria_relevante = buscar_memoria(mensagem)
@@ -75,9 +80,7 @@ def processar_mensagem(usuario_id, mensagem):
 
     MensagemLimpa, Topicos = limpar_transcricao(mensagem)
     salvar_contexto(usuario_id, MensagemLimpa)  # Atualiza memória de curto prazo
-    salvar_historico(usuario_id, MensagemLimpa, resposta)  # Atualiza memória de longo prazo
-    if Topicos != '':
-        salvar_principais_topicos(Topicos)
+    salvar_historico(usuario_id, MensagemLimpa, resposta,Topicos)  # Atualiza memória de longo prazo
     
     #adicionar_memoria(mensagem)  # Atualiza embeddings
 
@@ -87,17 +90,22 @@ def processar_mensagem(usuario_id, mensagem):
 # Executa o processo completo
 gravar_audio()
 transcricao = transcrever_audio()
-deep_seek_response = processar_mensagem(1, transcricao)
+print("📝 Transcrição:", transcricao)
+verificaTask = verificar_task(transcricao)
+print("📝 Task:", verificaTask)
+if verificaTask == "":
+    deep_seek_response = processar_mensagem(1, transcricao)
+else:
+    texto_para_fala(verificaTask)
 if deep_seek_response != '':
     if transcricao:
-        print("📝 Transcrição:", transcricao)
-
         print("Resposta Deep-Seek - ",deep_seek_response)
     else:
         print("❌ Erro na transcrição")
 
-    audio_gerado = texto_para_fala(deep_seek_response)
+    texto_para_fala(deep_seek_response)
 else:
-    print("J.A.R.V.I.S nao retornou nada!")
+    if verificaTask == "":
+        print("J.A.R.V.I.S nao retornou nada!")
 
 

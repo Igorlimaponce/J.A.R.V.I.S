@@ -17,20 +17,38 @@ cursor.execute("""
 """)
 conn.commit()
 
-def salvar_historico(usuario_id, mensagem, resposta,data=datetime.today()):
-    cursor.execute("INSERT INTO historico (usuario_id, mensagem, resposta,data) VALUES (%s, %s, %s,%s)", (usuario_id, mensagem, resposta,data))
+def salvar_historico(usuario_id, mensagem, resposta,Topicos,data=datetime.today()):
+    cursor.execute("INSERT INTO historico (usuario_id, mensagem, resposta,data,principais_topicos) VALUES (%s, %s, %s,%s,%s)", (usuario_id, mensagem, resposta,data,Topicos))
     conn.commit()
 
-def obter_historico(usuario_id, limite=20):
+def obter_historico(usuario_id, TopicosResumidos, limite=5):
+    """Busca histórico relevante com base nos principais tópicos"""
+    # Verifica se há dados para o usuário antes de fazer a consulta
     cursor.execute("SELECT EXISTS (SELECT 1 FROM historico WHERE usuario_id = %s)", (usuario_id,))
     existe = cursor.fetchone()[0]  # Retorna True se há dados, False se não houver
 
-    if existe == True:
-        cursor.execute("SELECT mensagem, resposta FROM historico WHERE usuario_id=%s ORDER BY data DESC LIMIT %s", (usuario_id, limite))
-        return cursor.fetchall()
-    else:
+    # Se não há histórico, retorna vazio
+    if not existe:
         return ""
+
+    # Se os tópicos estiverem vazios, evita erro
+    if not TopicosResumidos.strip():
+        return ""
+
+    # Monta a string de busca no formato correto para `to_tsquery`
+    topicos_busca = " & ".join(TopicosResumidos.lower().replace(",", " ").split())
+
+    # Faz a consulta ao histórico
+    cursor.execute("""
+        SELECT mensagem, resposta 
+        FROM historico 
+        WHERE to_tsvector('portuguese', principais_topicos) @@ to_tsquery('portuguese', %s) 
+        AND COALESCE(principais_topicos, '') <> ''
+        ORDER BY data DESC 
+        LIMIT %s
+
+    """, (topicos_busca, limite))
+
+    return cursor.fetchall()
+
     
-def salvar_principais_topicos(topicos_conversa):
-    cursor.execute("UPDATE historico SET principais_topicos = %s WHERE id = (SELECT id FROM historico ORDER BY data DESC LIMIT 1);", (topicos_conversa))
-    conn.commit()
